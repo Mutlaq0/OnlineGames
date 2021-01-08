@@ -1,0 +1,140 @@
+
+---test queries, to use, open the database OnlineGames in MSSql Server and run
+
+
+
+select Distinct Players.PlayerID,Players.FirstName +' ' + Players.LastName as Name,Players.NickName
+from Players inner join PlayedIn on Players.PlayerID=PlayedIn.PlayerID inner join BestOF100Playes on PlayedIn.GameID = dbo.BestOF100Playes.GameID
+where PlayedIn.Points >=50 and DATEDIFF(month,getDate(),BestOF100Playes.GameStartDateTime)<=2
+group by Players.PlayerID,Players.FirstName,Players.LastName,Players.NickName
+having count(PlayedIn.PlayerID)>=10 and avg(PlayedIn.Effectiveness)>=5
+
+
+select distinct Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName, Count(PlayedIn.PlayerID) as 'BestOF100Games', COUNT(Invited.PlayerID) as 'MatchesWithFriends'
+from Players left outer join PlayedIn on Players.PlayerID=PlayedIn.PlayerID left outer join Invited on Players.PlayerID = Invited.PlayerID
+where Invited.RecieveDate is not null
+group by Players.PlayerID,Players.FirstName,Players.LastName,Players.NickName,Players.PointsCalculatedField
+having  ((Players.PointsCalculatedField/(COUNT(PlayedIn.PlayerID)+COUNT(Invited.PlayerID)))>5) and((COUNT(Invited.PlayerID))>COUNT(PlayedIn.PlayerID))
+order by COUNT(PlayedIn.PlayerID) Desc, Players.NickName
+
+
+
+
+
+(select distinct Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName
+from Players inner join CreateYourOwnMatchWithFriends MF on Players.PlayerID=MF.PlayerID inner join Invited on MF.GameID = Invited.GameID
+where Invited.TimesDied<3)
+INTERSECT
+)(select distinct Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName
+from Players inner join Invited on Players.PlayerID = Invited.PlayerID 
+EXCEPT 
+select distinct Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName
+from Invited inner join Players on Players.PlayerID = Invited.PlayerID 
+where Invited.Points>50 )(
+INTERSECT
+(select distinct Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName
+from Players inner join PlayedIn on Players.PlayerID = PlayedIn.PlayerID
+where (PlayedIn.Exists = 0 and PlayedIn.Accidents = 1) or PlayedIn.Effectiveness=10)
+
+
+select Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName,'BestOf100' as GameType,COUNT(PlayedIn.PlayerID) as NoGames,MIN(B.GameStartDateTime) as FirstGame, MAX(B.GameStartDateTime) as LastGame
+from Players inner join PlayedIn on Players.PlayerID = PlayedIn.PlayerID inner join BestOF100Playes as B on PlayedIn.GameID = B.GameID
+group By Players.PlayerID, Players.FirstName , Players.LastName , Players.NickName
+UNION
+select Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName,'CreatedMatch' as GameType,COUNT(C.PlayerID) as NoGames,MIN(C.GameStartDateTime) as FirstGame, MAX(C.GameStartDateTime) as LastGame
+from Players inner join CreateYourOwnMatchWithFriends as C on Players.PlayerID = C.PlayerID
+group By Players.PlayerID, Players.FirstName , Players.LastName , Players.NickName
+UNION
+select Players.PlayerID, Players.FirstName +' '+ Players.LastName as FullName, Players.NickName,'InvitedMatch' as GameType,COUNT(Invited.PlayerID) as NoGames,MIN(Invited.RecieveDate) as FirstGame, MAX(Invited.RecieveDate) as LastGame
+from Players inner join Invited on Players.PlayerID = Invited.PlayerID
+group By Players.PlayerID, Players.FirstName , Players.LastName , Players.NickName
+
+
+
+
+select Players.PlayerID, Players.FirstName+' '+Players.LastName as Name, Players.NickName, G.GiftID, G.ShortDes, Ranks.RankID,Ranks.Name
+from Players inner join GiftRankPlayer GRP on Players.PlayerID=GRP.PlayerID inner join Gift G on GRP.GiftID = G.GiftID inner join Ranks on GRP.RankID = Ranks.RankID
+where  (G.Price = (select MIN(G2.Price) from Gift G2 inner join GiftRank GR on G2.GiftID=GR.GiftID) and
+       (NOT EXISTS (select GiftID from GiftRank GR2 where GR2.GiftID <>  G.GiftID)))
+
+
+select distinct GiftID,ShortDes,Price 
+from Gift
+where GiftID in (select distinct GiftID
+                 from GiftRank
+                 group by GiftID
+                 having COUNT(GiftID)>=0.5*COUNT(RankID)) 
+    or GiftID in(select distinct GiftID
+                 from GiftPurchase
+                 where quantity >=2 
+                 group by GiftID
+                 having COUNT(GiftID)>=0.5*COUNT(PlayerID))
+   
+
+select F.playerID1 as PlayerID, P.FirstName + ' ' + P.LastName as FullName, P.NickName
+from FriendOf F inner join Players P On F.PlayerID1 = P.PlayerID
+group by F.playerID1, P.FirstName, P.LastName, P.NickName
+having COUNT(PlayerID1) * 0.5 <= (select COUNT(distinct I.PlayerID)   /*Player Invited half of his friends to the game he created*/
+                                 from Invited I inner join CreateYourOwnMatchWithFriends CY ON I.GameID = CY.GameID
+                                 where CY.GameStartDateTime > DATEADD(year,-1,GETDATE()) AND CY.PlayerID = F.PlayerID1
+                                 group by CY.PlayerID
+                                 having COUNT(distinct I.PlayerID) * 0.5 <= (select COUNT(CY.PlayerID)   /*half of the ones he invited accepted (Receive Date is not null)*/
+                                 from Invited I inner join CreateYourOwnMatchWithFriends CY ON I.GameID = CY.GameID
+                                 where CY.GameStartDateTime > DATEADD(year,-1,GETDATE()) AND CY.PlayerID = F.PlayerID1 AND I.RecieveDate is not null
+                                 group by CY.PlayerID) )
+
+select F.playerID as PlayerID, P.FirstName + ' ' + P.LastName as FullName, P.NickName
+ from( /*Count Friends From both columns*/
+ select playerID1 as playerID from FriendOf 
+ union all
+ select playerID2 from FriendOf)as F inner join Players P On F.PlayerID = P.PlayerID
+group by F.playerID, P.FirstName, P.LastName, P.NickName /*The rest in essentially the same as the */
+having COUNT(F.PlayerID) * 0.5 <= (select COUNT(distinct I.PlayerID)
+                                 from Invited I inner join CreateYourOwnMatchWithFriends CY ON I.GameID = CY.GameID
+                                 where CY.GameStartDateTime > DATEADD(year,-1,GETDATE()) AND CY.PlayerID = F.PlayerID
+                                 group by CY.PlayerID
+                                 having COUNT(distinct I.PlayerID) * 0.5 <= (select COUNT(CY.PlayerID)
+                                 from Invited I inner join CreateYourOwnMatchWithFriends CY ON I.GameID = CY.GameID
+                                 where CY.GameStartDateTime > DATEADD(year,-1,GETDATE()) AND CY.PlayerID = F.PlayerID AND I.RecieveDate is not null
+                                 group by CY.PlayerID))
+
+
+
+
+
+create trigger CheckFriends on Invited after insert,update as 
+declare @playerID int, 
+@gameID bigint
+select @playerID=I.PlayerID, @gameID=I.GameID
+from inserted I 
+if 1> (select COUNT(*)
+       from FriendOf
+       where ((FriendOf.PlayerID1 = @playerID and FriendOf.PlayerID2 = (select MF.PlayerID
+                                                                      from CreateYourOwnMatchWithFriends MF
+                                                                      where @gameID=MF.GameID))
+              or (FriendOf.PlayerID1 = (select MF1.PlayerID
+                                        from CreateYourOwnMatchWithFriends MF1
+                                        where @gameID = MF1.GameID) and FriendOf.PlayerID2 =@playerID)))
+
+ rollback;    
+
+
+create trigger checkGift on GiftRankPlayer instead of insert,update as 
+declare @RankID int, 
+@GiftID int,
+@PlayerID int,
+@DateRecieve date,
+@Suspended bit
+select @RankID=I.RankID, @GiftID= I.GiftID, @PlayerID=I.PlayerID, @DateRecieve = I.DateRecieve, @Suspended = I.Suspended
+from inserted I  
+ if @GiftID not in   (select GiftID
+               from GiftRank
+               where GiftRank.RankID = @RankID and GiftRank.GiftID=@GiftID )           
+           Set @GiftID  = (Select distinct Gift.GiftID
+           from Gift inner join GiftRank GR1 on Gift.GiftID=GR1.GiftID
+           where Gift.Price = (select Min(Gift.Price) from Gift inner join GiftRank on Gift.GiftID=GiftRank.GiftID where GiftRank.RankID=@RankID ))
+           insert into GiftRankPlayer(RankID,PlayerID,GiftID,DateRecieve,Suspended) values (@RankID,@PlayerID,@GiftID,@DateRecieve,@Suspended)
+if((select Players.PointsCalculatedField from Players where Players.PlayerID = @PlayerID)< (select Ranks.MinPoints
+                                                                                            from Ranks 
+                                                                                          where Ranks.RankID =@RankID))
+rollback;

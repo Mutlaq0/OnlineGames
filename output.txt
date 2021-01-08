@@ -1,0 +1,4 @@
+inserted rows : 
+rank id = 1, player id = 4
+updated rows : 
+rank id = 4, player id = 8

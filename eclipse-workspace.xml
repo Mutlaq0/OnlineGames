@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project OnlineGames with libraries in sub-folder">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="C:/Users/mutla/eclipse-workspace"/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/OnlineGames.jar">
+            <manifest>
+                <attribute name="Main-Class" value="View.LoginPage"/>
+                <attribute name="Class-Path" value=". OnlineGames_lib/jfxswt.jar OnlineGames_lib/jfxrt.jar OnlineGames_lib/jfreechart-1.0.19.jar OnlineGames_lib/jcommon-1.0.23.jar OnlineGames_lib/jfreesvg-2.0.jar OnlineGames_lib/orsoncharts-1.4-eval-nofx.jar OnlineGames_lib/orsonpdf-1.6-eval.jar OnlineGames_lib/jfreechart-1.0.19-experimental.jar OnlineGames_lib/jfreechart-1.0.19-demo.jar OnlineGames_lib/mssql-jdbc-6.4.0.jre7.jar OnlineGames_lib/mssql-jdbc-6.4.0.jre8.jar OnlineGames_lib/mssql-jdbc-6.4.0.jre9.jar"/>
+            </manifest>
+            <fileset dir="${dir.jarfile}/bin"/>
+        </jar>
+        <delete dir="${dir.jarfile}/OnlineGames_lib"/>
+        <mkdir dir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jre1.8.0_171/lib/jfxswt.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jre1.8.0_171/lib/ext/jfxrt.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/jfreechart-1.0.19.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/jcommon-1.0.23.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/jfreesvg-2.0.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/orsoncharts-1.4-eval-nofx.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/orsonpdf-1.6-eval.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/lib/jfreechart-1.0.19-experimental.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/Program Files/Java/jfreechart-1.0.19/jfreechart-1.0.19-demo.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/jdbcdemo/sqljdbc_6.4/enu/mssql-jdbc-6.4.0.jre7.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/jdbcdemo/sqljdbc_6.4/enu/mssql-jdbc-6.4.0.jre8.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+        <copy file="C:/jdbcdemo/sqljdbc_6.4/enu/mssql-jdbc-6.4.0.jre9.jar" todir="${dir.jarfile}/OnlineGames_lib"/>
+    </target>
+</project>
